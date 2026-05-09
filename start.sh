@@ -27,7 +27,7 @@ done
 
 # Start Streamlit
 streamlit run ui/app.py \
-    --server.port 8501 \
+    --server.port 7860 \
     --server.address 0.0.0.0 \
     --server.headless true \
     --server.fileWatcherType none \

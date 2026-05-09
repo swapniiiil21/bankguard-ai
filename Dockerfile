@@ -27,7 +27,7 @@ RUN useradd -m -u 1001 bankguard \
 USER bankguard
 
 # Expose ports
-EXPOSE 8000 8501
+EXPOSE 8000 7860
 
 # ── Start script ──────────────────────────────────────────────────────────
 COPY start.sh /start.sh
