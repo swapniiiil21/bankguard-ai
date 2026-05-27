@@ -84,15 +84,17 @@ app_port: 7860
 
 | Layer | Technology |
 |-------|-----------|
-| **Agent Orchestration** | LangGraph 0.1, LangChain 0.2 |
-| **LLM** | Groq (Llama 3 70B) |
-| **OCR** | Tesseract (primary), AWS Textract (fallback) |
+| **Agent Orchestration** | Hierarchical LangGraph (Supervisor/Workers) |
+| **LLM** | Groq (Llama 3 70B) + LangSmith Observability |
+| **Stream Processing** | Apache Kafka + Celery/Faust |
 | **ML Anomaly Detection** | scikit-learn IsolationForest |
-| **Vector Store** | Pinecone + HuggingFace all-MiniLM-L6-v2 |
-| **Backend API** | FastAPI + Uvicorn |
-| **Database** | MongoDB (motor async) |
-| **Frontend** | Streamlit + Plotly |
-| **DevOps** | Docker, Docker Compose, GitHub Actions |
+| **Vector Memory** | Pinecone + Hybrid Search (Agentic RAG) |
+| **Episodic Memory** | Redis (State management) |
+| **Graph Intelligence**| Neo4j (Fraud ring detection) |
+| **Database** | PostgreSQL (Immutable audit trails) |
+| **Backend API** | FastAPI + OAuth2 + Kong Gateway |
+| **Frontend** | Next.js + Tailwind + Cytoscape.js |
+| **DevOps & K8s** | Kubernetes, ArgoCD, Docker Compose |
 
 ---
 
@@ -224,21 +226,23 @@ Push to main       → [Build] → Docker image built & pushed to Docker Hub
 
 ---
 
-## Project Structure
+## Enterprise Project Structure
 
 ```
 bankguard-ai/
-├── agents/              # 7 specialist agents (each with .run() method)
-├── graph/               # LangGraph StateGraph + TypedDict schema
-├── tools/               # OCR, Pinecone, Isolation Forest, Groq wrappers
-├── api/                 # FastAPI app + routes + Pydantic models
-├── ui/                  # Streamlit 3-page frontend
-├── data/                # Sample transactions CSV + mock OCR outputs
-├── tests/               # pytest test suite (OCR, agents, API)
-├── .github/workflows/   # CI/CD pipeline
-├── Dockerfile
-├── docker-compose.yml
-├── requirements.txt
+├── k8s/                        # Kubernetes manifests & Helm charts
+├── src/
+│   ├── api/                    # FastAPI Gateway, auth, and routes
+│   ├── agents/                 # LangGraph Nodes & specialized Agents
+│   ├── core/                   # Security (Vault), Config, DB Connections
+│   ├── events/                 # Kafka Producers & Consumers
+│   ├── graph_db/               # Neo4j Cypher queries & models
+│   ├── memory/                 # Vector, Redis, and Postgres handlers
+│   └── tools/                  # Custom tools (OCR, Agentic RAG, etc.)
+├── ui/                         # Next.js Enterprise Frontend
+├── tests/                      # Pytest, DeepEval, Ragas frameworks
+├── docker-compose.prod.yml     # Scalable distributed infrastructure
+├── skaffold.yaml               # K8s local dev config
 └── .env.example
 ```
 
@@ -262,18 +266,16 @@ pytest tests/ -v --tb=short
 
 ---
 
-## Future Improvements
+## Enterprise Roadmap (Currently in Implementation)
 
-- [ ] **Real-time streaming** — stream agent progress via WebSocket to Streamlit
-- [ ] **Face matching** — compare Aadhaar photo with live selfie (DeepFace)
-- [ ] **Graph analytics** — Neo4j for fraud ring detection across cases
-- [ ] **SMS/Email alerts** — notify investigators on high-risk cases
-- [ ] **Model fine-tuning** — fine-tune Llama 3 on bank-domain fraud data
+- [x] **Agentic Orchestration** — Hierarchical Supervisor state machine
+- [x] **Event-Driven Architecture** — Kafka integration for real-time transactions
+- [x] **Graph Analytics** — Neo4j for synthetic identity and fraud ring detection
+- [x] **Enterprise Memory** — Redis checkpointer + PostgreSQL audit logs
+- [ ] **Next.js Frontend** — Live heatmaps and interactive Cytoscape.js graphs
+- [ ] **AI Observability** — LangSmith tracing and OpenTelemetry
+- [ ] **Cloud-Native Deployment** — Kubernetes (EKS) and HashiCorp Vault
 - [ ] **Multi-language OCR** — Hindi, Tamil, Telugu document support
-- [ ] **Explainability** — SHAP values for ML anomaly score breakdown
-- [ ] **Redis caching** — replace in-memory upload cache with Redis
-- [ ] **Rate limiting** — API throttling per client IP
-- [ ] **Audit logging** — immutable audit trail per case for compliance
 
 ---
 

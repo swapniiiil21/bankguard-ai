@@ -1,0 +1,10 @@
+apiVersion: v2
+name: bankguard
+description: Enterprise Helm Chart for BankGuard AI microservices and LangGraph workers.
+type: application
+version: 2.0.0
+appVersion: "2.0.0"
+dependencies:
+  - name: strimzi-kafka-operator
+    version: 0.38.0
+    repository: https://strimzi.io/charts/

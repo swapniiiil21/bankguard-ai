@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-api-gateway
+  namespace: bankguard-core
+  labels:
+    app: api-gateway
+spec:
+  replicas: {{ .Values.api.replicaCount }}
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+      annotations:
+        # Inject Istio sidecar for mTLS Zero-Trust communication
+        sidecar.istio.io/inject: "true"
+        # Vault dynamic secrets injection
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "api-role"
+    spec:
+      containers:
+        - name: api-gateway
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          ports:
+            - containerPort: 8000
+          env:
+            - name: KAFKA_BROKER
+              value: "bankguard-kafka-bootstrap:9092"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 1000m
+              memory: 2Gi

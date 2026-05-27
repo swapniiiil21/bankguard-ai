@@ -37,6 +37,6 @@ UI_PID=$!
 echo "Streamlit started (PID: $UI_PID)"
 
 # Wait for either process to exit
-wait -n $API_PID $UI_PID
+wait $API_PID $UI_PID
 echo "A service exited. Shutting down..."
 kill $API_PID $UI_PID 2>/dev/null || true

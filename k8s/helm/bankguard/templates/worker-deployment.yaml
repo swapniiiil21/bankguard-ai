@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-agent-worker
+  namespace: bankguard-core
+spec:
+  # Replicas omitted here; managed dynamically by KEDA below
+  selector:
+    matchLabels:
+      app: agent-worker
+  template:
+    metadata:
+      labels:
+        app: agent-worker
+      annotations:
+        sidecar.istio.io/inject: "true"
+    spec:
+      containers:
+        - name: langgraph-worker
+          image: "{{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}"
+          env:
+            - name: KAFKA_BROKER
+              value: "bankguard-kafka-bootstrap:9092"
+            - name: NEO4J_URI
+              value: "bolt://neo4j:7687"
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 2Gi
+            limits:
+              cpu: 2000m
+              memory: 4Gi
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ .Release.Name }}-worker-scaler
+  namespace: bankguard-core
+spec:
+  scaleTargetRef:
+    name: {{ .Release.Name }}-agent-worker
+  minReplicaCount: 1   # Keep 1 warm worker
+  maxReplicaCount: 50  # Scale out to 50 pods during transaction spikes
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: bankguard-kafka-bootstrap:9092
+        consumerGroup: langgraph_workers
+        topic: transactions.raw
+        # Scale up one pod for every 50 backlogged messages
+        lagThreshold: "50"

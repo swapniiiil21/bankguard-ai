@@ -1,0 +1,54 @@
+name: BankGuard Enterprise CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test_and_build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Run DeepEval AI Benchmarks
+        run: |
+          pip install -r requirements.txt
+          pytest tests/ -v
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push Core API Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: bankguard-api
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f k8s/Dockerfile.api .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Update Helm Chart Image Tag (GitOps)
+        run: |
+          # Uses yq to update the image tag in the values.yaml, which triggers ArgoCD to sync
+          yq e -i '.api.image.tag = "${{ github.sha }}"' k8s/helm/bankguard/values.yaml
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add k8s/helm/bankguard/values.yaml
+          git commit -m "chore: bump API image tag to ${{ github.sha }} [skip ci]"
+          git push

@@ -1,0 +1,27 @@
+api:
+  replicaCount: 3
+  image:
+    repository: "123456789012.dkr.ecr.us-east-1.amazonaws.com/bankguard-api"
+    tag: "latest" # Managed by GitOps ArgoCD
+
+worker:
+  image:
+    repository: "123456789012.dkr.ecr.us-east-1.amazonaws.com/bankguard-worker"
+    tag: "latest" # Managed by GitOps ArgoCD
+
+# KEDA Autoscaling Configuration
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 50
+  kafkaLagThreshold: 50
+
+# Istio Service Mesh
+istio:
+  enabled: true
+  mtls: "STRICT"
+
+# HashiCorp Vault
+vault:
+  role: "bankguard-role"
+  path: "secret/data/bankguard"
